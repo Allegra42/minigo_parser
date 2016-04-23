@@ -12,11 +12,12 @@ void yyerror (const char *s);
 %}
 
 
-%union {
+/*%union {
   int intval;
   bool boolval;
   char *stringval;
 }
+*/
 
 %token BROPEN
 %token BRCLOSE
@@ -39,10 +40,16 @@ void yyerror (const char *s);
 %token NORMBROPEN
 %token NORMBRCLOSE
 
-%token <intval> INTS
+%token INTS
+%token BOOLS
+%token LETTER
+/*%token <intval> INTS
 %token <boolval> BOOLS
 %token <stringval> LETTER
+*/
 
+%left BROPEN BRCLOSE SEMICOLON GO ARROW DEF NEWCHAN ASSIGN WHILE PRINT NORMBROPEN NORMBRCLOSE
+%left NOT
 
 %left BOOLAND
 %left EQUAL
@@ -60,44 +67,44 @@ block:
 	;
 statement:
 	statement SEMICOLON statement
-	| GO block
-	| LETTER ARROW aexp
-	| ARROW LETTER
-	| LETTER DEF bexp 
-	| LETTER DEF NEWCHAN
-	| LETTER ASSIGN bexp
-	| WHILE bexp block
-	| PRINT aexp
+	| GO block 
+	| LETTER ARROW aexp {$$ = $3; }
+	| ARROW LETTER {$$ = 1; }
+	| LETTER DEF bexp {$$ = $3; }
+	| LETTER DEF NEWCHAN {$$ = 1; } 
+	| LETTER ASSIGN bexp {$$ = $3; }
+	| WHILE bexp block {$$ = $2; }
+	| PRINT aexp {$$ = $2; cout << "print: " << $2 << endl; }
 	;
 bexp: 
-	| bexp BOOLAND cexp 
-	| cexp
+	| bexp BOOLAND cexp {$$ = ($1 && $3); } 
+	| cexp {$$ = $1; }
 	;
 cexp:
-	cterm EQUAL cterm
-	| cterm
+	cterm EQUAL cterm {$$ = ($1 == $3); }
+	| cterm {$$ = $1; }
 	;
 cterm:
-	aexp GREATER aexp
-	| aexp
+	aexp GREATER aexp {$$ = ($1 > $3); }
+	| aexp {$$ = $1; }
 	;
 aexp: 
-	aexp PLUS term {} 
-	| aexp MINUS term {}
-	| term {}
+	aexp PLUS term {$$ = $1 + $3; cout << "$$= " << $$ << endl;} 
+	| aexp MINUS term {$$ = $1; }
+	| term {$$ = $1; }
 	;
 term:
-	factor
-	| term TIMES factor {} 
-	| term DIVIDE factor {}
+	factor {$$ = $1; }
+	| term TIMES factor {$$ = $1 * $2; } 
+	| term DIVIDE factor {$$ = $1 / $3; }  
 	;
 factor:
-	INTS 
-	| BOOLS 
-	| LETTER 
-	| ARROW LETTER {}
-	| NOT factor {}
-	| NORMBROPEN bexp NORMBRCLOSE {}
+	INTS {$$ = $1; }
+	| BOOLS {$$ = $1; } 
+	| LETTER {$$ = $1; }
+	| ARROW LETTER  {$$ = 1; } 
+	| NOT factor {$$ = $1; }
+	| NORMBROPEN bexp NORMBRCLOSE {$$ = $1; }
 	;
 
 %%

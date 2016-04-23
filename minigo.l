@@ -31,10 +31,10 @@ int linenr = 1;
 ")"            { return NORMBRCLOSE; }
 [ \t]          ;
 \n             { ++linenr;}
-"true"         { yylval.boolval = 1; return BOOLS; }
-"false"        { yylval.boolval = 0; return BOOLS; }
-[a-z]+[0-9]*[a-z]*  { yylval.stringval = strdup (yytext); return LETTER; }
-[0-9]+         { yylval.intval = atoi (yytext); return INTS; }
+"true"         { yylval = 1; return BOOLS; }
+"false"        { yylval = 0; return BOOLS; }
+[a-z]+[0-9]*[a-z]*  { /*yylval = atoi (yytext);*/ return LETTER; }
+[0-9]+         { yylval = atoi (yytext); return INTS; }
 
 %%
 
