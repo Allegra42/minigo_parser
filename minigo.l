@@ -17,6 +17,8 @@ int linenr = 1;
 ":="           { return DEF; }
 "newChannel"   { return NEWCHAN; }
 "="            { return ASSIGN; }
+"if"           { return IF; }
+"else"         { return ELSE; }
 "while"        { return WHILE; }
 "print"        { return PRINT; }
 "&&"           { return BOOLAND; }

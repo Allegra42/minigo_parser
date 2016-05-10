@@ -27,6 +27,8 @@ void yyerror (const char *s);
 %token DEF
 %token NEWCHAN
 %token ASSIGN
+%token IF
+%token ELSE
 %token WHILE
 %token PRINT
 %token BOOLAND
@@ -48,7 +50,7 @@ void yyerror (const char *s);
 %token <stringval> LETTER
 */
 
-%left BROPEN BRCLOSE SEMICOLON GO ARROW DEF NEWCHAN ASSIGN WHILE PRINT NORMBROPEN NORMBRCLOSE
+%left BROPEN BRCLOSE SEMICOLON GO ARROW DEF NEWCHAN ASSIGN WHILE PRINT NORMBROPEN NORMBRCLOSE IF ELSE
 %left NOT
 
 %left BOOLAND
@@ -60,7 +62,7 @@ void yyerror (const char *s);
 %%
 
 minigo:
-	block   {cout << "done!" << endl; }
+	block   {cout << "File parsed correctly!" << endl; }
 	;
 block:
 	BROPEN statement BRCLOSE
@@ -70,11 +72,13 @@ statement:
 	| GO block 
 	| LETTER ARROW aexp {$$ = $3; }
 	| ARROW LETTER {$$ = 1; }
+	| LETTER DEF ARROW LETTER
 	| LETTER DEF bexp {$$ = $3; }
 	| LETTER DEF NEWCHAN {$$ = 1; } 
 	| LETTER ASSIGN bexp {$$ = $3; }
 	| WHILE bexp block {$$ = $2; }
-	| PRINT aexp {$$ = $2; cout << "print: " << $2 << endl; }
+        | IF bexp block ELSE block 
+	| PRINT aexp {$$ = $2; /*cout << "print: " << $2 << endl;*/ }
 	;
 bexp: 
 	| bexp BOOLAND cexp {$$ = ($1 && $3); } 
@@ -89,7 +93,7 @@ cterm:
 	| aexp {$$ = $1; }
 	;
 aexp: 
-	aexp PLUS term {$$ = $1 + $3; cout << "$$= " << $$ << endl;} 
+	aexp PLUS term {$$ = $1 + $3; /*cout << "$$= " << $$ << endl;*/} 
 	| aexp MINUS term {$$ = $1; }
 	| term {$$ = $1; }
 	;
@@ -102,7 +106,6 @@ factor:
 	INTS {$$ = $1; }
 	| BOOLS {$$ = $1; } 
 	| LETTER {$$ = $1; }
-	| ARROW LETTER  {$$ = 1; } 
 	| NOT factor {$$ = $1; }
 	| NORMBROPEN bexp NORMBRCLOSE {$$ = $1; }
 	;
