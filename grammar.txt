@@ -1,0 +1,45 @@
+{ ... } stands for repetition
+
+[ ... ] stands for option
+
+
+operator precedence from top (highest) to bottom (lowest)
+
+* /
++ -
+>
+==
+&&
+||   -- not supported
+
+prog      ::= block
+block     ::= "{" statement "}"
+statement ::= statement ";" statement
+            |  "go" block
+            |  vars "<-" aexp
+            |  "<-" vars
+            |  vars ":=" bexp
+            |  vars ":=" "newChannel"
+            |  vars "="  bexp
+            |  "while" bexp block
+            |  "if" bexp block "else" block
+            |  "print" aexp
+ 
+
+bexp ::= cexp { "&&" cexp }
+
+cexp ::= cterm [ "==" cterm ]
+
+cterm ::= aexp [ ">" aexp ]
+
+aexp ::= term { "+" term | "-" term }
+
+term ::= factor { "*" factor | "/" factor }
+
+factor ::=  ints | bools | vars | "!" factor | "(" bexp ")"
+
+ints ::=  [0-9]+
+
+bools ::= 'true' | 'false'
+
+vars ::= [a-z]+[0-9]*[a-z]* 
