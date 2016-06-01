@@ -1,6 +1,10 @@
 %{
 #include <cstdio>
 #include <iostream>
+
+#include "symtable.h"
+#include "stack.h"
+
 using namespace std;
 
 extern "C" int yylex();
@@ -8,16 +12,37 @@ extern "C" int yyparse();
 extern "C" FILE *yyin;
 extern int linenr;
 
+int scope = 0;
+Type type = CMD;
+
+void install (int scope, char *sym_name, Type type) {
+  symentry *s = getsym (scope, sym_name);
+  if (s == NULL) {
+    s == putsym (scope, sym_name, type);
+    printf ("added %s to symtable scope %d  with type %d at line nr %d \n", sym_name, scope, type, linenr);
+  }
+  else {
+    printf ("%s is already defined in scope %d, error on line nr %d \n", sym_name, scope, linenr);
+  }
+}
+
+void check_context (int scope, char *sym_name) {
+  symentry *identifier = getsym (scope, sym_name);
+  if (identifier == NULL || identifier->scope != scope) {
+    printf ("%s is an undeclared identifier in scope %d at line nr %d \n", sym_name, scope, linenr);
+  }
+}
+
 void yyerror (const char *s);
 %}
 
 
-/*%union {
-  int intval;
-  bool boolval;
+%union {
+/*  int intval;
+  bool boolval;*/ 
   char *stringval;
 }
-*/
+
 
 %token BROPEN
 %token BRCLOSE
@@ -44,7 +69,7 @@ void yyerror (const char *s);
 
 %token INTS
 %token BOOLS
-%token LETTER
+%token <stringval> LETTER
 /*%token <intval> INTS
 %token <boolval> BOOLS
 %token <stringval> LETTER
@@ -62,52 +87,53 @@ void yyerror (const char *s);
 %%
 
 minigo:
-	block   {cout << "File parsed correctly!" << endl; }
+	block  { cout << "File parsed correctly!" << endl; } 
 	;
 block:
-	BROPEN statement BRCLOSE
+	BROPEN {push(++scope);} statement BRCLOSE { scope = (pop() - 1);/*scope = mainscope; */}
 	;
 statement:
 	statement SEMICOLON statement
-	| GO block 
-	| LETTER ARROW aexp {$$ = $3; }
-	| ARROW LETTER {$$ = 1; }
-	| LETTER DEF ARROW LETTER
-	| LETTER DEF bexp {$$ = $3; }
-	| LETTER DEF NEWCHAN {$$ = 1; } 
-	| LETTER ASSIGN bexp {$$ = $3; }
-	| WHILE bexp block {$$ = $2; }
+	| GO  block              
+	| LETTER ARROW aexp           { check_context (scope, $1);} 
+	| ARROW LETTER                { check_context (scope, $2);} 
+	| LETTER DEF ARROW LETTER     { install (scope, $1, INT);}
+	| LETTER DEF bexp             { install (scope, $1, type);}
+	| LETTER DEF NEWCHAN          { install (scope, $1, CHAN);} 
+	| LETTER ASSIGN bexp          { check_context (scope, $1);}
+	| WHILE bexp block 
         | IF bexp block ELSE block 
-	| PRINT aexp {$$ = $2; /*cout << "print: " << $2 << endl;*/ }
+	| PRINT aexp 
 	;
+
 bexp: 
-	| bexp BOOLAND cexp {$$ = ($1 && $3); } 
-	| cexp {$$ = $1; }
+	bexp BOOLAND cexp  
+	| cexp 
 	;
 cexp:
-	cterm EQUAL cterm {$$ = ($1 == $3); }
-	| cterm {$$ = $1; }
+	cterm EQUAL cterm 
+	| cterm 
 	;
 cterm:
-	aexp GREATER aexp {$$ = ($1 > $3); }
-	| aexp {$$ = $1; }
+	aexp GREATER aexp 
+	| aexp
 	;
 aexp: 
-	aexp PLUS term {$$ = $1 + $3; /*cout << "$$= " << $$ << endl;*/} 
-	| aexp MINUS term {$$ = $1; }
-	| term {$$ = $1; }
+	aexp PLUS term  
+	| aexp MINUS term 
+	| term 
 	;
 term:
-	factor {$$ = $1; }
-	| term TIMES factor {$$ = $1 * $2; } 
-	| term DIVIDE factor {$$ = $1 / $3; }  
+	factor 
+	| term TIMES factor  
+	| term DIVIDE factor   
 	;
 factor:
-	INTS {$$ = $1; }
-	| BOOLS {$$ = $1; } 
-	| LETTER {$$ = $1; }
-	| NOT factor {$$ = $1; }
-	| NORMBROPEN bexp NORMBRCLOSE {$$ = $1; }
+	INTS       {type = INT; } 
+	| BOOLS    {type = BOOL; }
+	| LETTER   {symentry *entr = getsym(scope, $1); if (entr != NULL) {type = entr->symtype;} else {type = UD; cout << $1 << " is not defined in scope " << scope << " at line: " << linenr << endl;}} 
+	| NOT factor 
+	| NORMBROPEN bexp NORMBRCLOSE 
 	;
 
 %%

@@ -33,10 +33,10 @@ int linenr = 1;
 ")"            { return NORMBRCLOSE; }
 [ \t]          ;
 \n             { ++linenr;}
-"true"         { yylval = 1; return BOOLS; }
-"false"        { yylval = 0; return BOOLS; }
-[a-z]+[0-9]*[a-z]*  { /*yylval = atoi (yytext);*/ return LETTER; }
-[0-9]+         { yylval = atoi (yytext); return INTS; }
+"true"         {  return BOOLS; }
+"false"        {  return BOOLS; }
+[a-z]+[0-9]*[a-z]*  { yylval.stringval = (char *) strdup (yytext); return LETTER; }
+[0-9]+         {  return INTS; }
 
 %%
 
