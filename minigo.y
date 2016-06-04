@@ -14,6 +14,7 @@ extern int linenr;
 
 int scope = 0;
 Type type = CMD;
+Type intern_type = UD;
 
 void install (int scope, char *sym_name, Type type) {
   symentry *s = getsym (scope, sym_name);
@@ -67,13 +68,11 @@ void yyerror (const char *s);
 %token NORMBROPEN
 %token NORMBRCLOSE
 
-%token INTS
-%token BOOLS
+/*%token INTS
+%token BOOLS */
 %token <stringval> LETTER
-/*%token <intval> INTS
+%token <intval> INTS
 %token <boolval> BOOLS
-%token <stringval> LETTER
-*/
 
 %left BROPEN BRCLOSE SEMICOLON GO ARROW DEF NEWCHAN ASSIGN WHILE PRINT NORMBROPEN NORMBRCLOSE IF ELSE
 %left NOT
@@ -90,7 +89,7 @@ minigo:
 	block  { cout << "File parsed correctly!" << endl; } 
 	;
 block:
-	BROPEN {push(++scope);} statement BRCLOSE { scope = (pop() - 1);/*scope = mainscope; */}
+	BROPEN {push(++scope);} statement BRCLOSE { scope = (pop() - 1);}
 	;
 statement:
 	statement SEMICOLON statement
@@ -107,31 +106,54 @@ statement:
 	;
 
 bexp: 
-	bexp BOOLAND cexp  
+	bexp BOOLAND cexp  { if ((type == BOOL) && (intern_type == BOOL)) {cout << "correct && at line: " 
+		                << linenr << endl; type = BOOL;}
+			     else {cout << "not possible to compare something else than BOOLs at line: " 
+			        << linenr << endl; type = UD;}}
 	| cexp 
 	;
 cexp:
-	cterm EQUAL cterm 
+	cterm EQUAL cterm  { if (type == intern_type) { cout << "correct == at line: " << linenr << endl;
+			        type = BOOL; }
+			     else { cout << "not possible to compare incompatible types at line: " << linenr
+			        << endl; type = UD; }}
 	| cterm 
 	;
 cterm:
-	aexp GREATER aexp 
+	aexp GREATER aexp  { if (type == intern_type) { cout << "correct > at line: " << linenr << endl; 
+	                        type = BOOL;}
+			     else { cout << "not possible to compare incompatible types at line: " << linenr 
+	                        << endl; type = UD; }}
 	| aexp
 	;
 aexp: 
-	aexp PLUS term  
-	| aexp MINUS term 
-	| term 
+	aexp PLUS term     { if ((type == INT) && (intern_type == INT)) {type = INT; 
+                                cout << "correct addition at line: " << linenr << endl; } 
+                             else { cout << "its not allowed to add something else than INTs at line: " 
+                                << linenr << endl;}}
+	| aexp MINUS term  { if ((type == INT) && (intern_type == INT)) {type = INT; 
+                                cout << "correct subtraction at line: " << linenr << endl; } 
+                             else { cout << "its not allowed to subtract something else than INTs at line: " 
+                                 << linenr << endl;}}
+	| term               
 	;
 term:
-	factor 
-	| term TIMES factor  
-	| term DIVIDE factor   
+	factor  
+	| term TIMES factor  { if((type == INT) && (intern_type == INT)){type = INT;
+			          cout << "correct multiplication at line: " << linenr << endl;}
+                               else {cout << "it is not allowed to multiply something else than INTs at line: " 		                        << linenr << endl;} }  
+	| term DIVIDE factor { if((type == INT) && (intern_type == INT)){type = INT; 
+                                  cout << "correct division at line: " << linenr << endl;} 
+                               else {cout << "it is not allowed to divide something else than INTs at line: "
+                                   <<linenr << endl;} }   
 	;
 factor:
-	INTS       {type = INT; } 
-	| BOOLS    {type = BOOL; }
-	| LETTER   {symentry *entr = getsym(scope, $1); if (entr != NULL) {type = entr->symtype;} else {type = UD; cout << $1 << " is not defined in scope " << scope << " at line: " << linenr << endl;}} 
+	INTS       {intern_type = type; type = INT; } 
+	| BOOLS    {intern_type = type; type = BOOL; }
+	| LETTER   {symentry *entr = getsym(scope, $1); if (entr != NULL) 
+                    {intern_type = type; type = entr->symtype;} 
+                    else {intern_type = type; type = UD; cout << $1 << " is not defined in scope " 
+                    << scope << " at line: " << linenr << endl;}} 
 	| NOT factor 
 	| NORMBROPEN bexp NORMBRCLOSE 
 	;
