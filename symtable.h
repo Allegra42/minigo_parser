@@ -1,7 +1,6 @@
 #include <string.h>
 
 typedef enum Type {
-	UD,
 	INT,
 	BOOL,
 	CMD,
