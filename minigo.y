@@ -93,7 +93,7 @@ void yyerror (const char *s);
 minigo:
 	block  { cout << endl << "File parsed correctly!" << endl; 
                  cout << typerr << " Type Errors!" << endl; } 
-	;
+    ;
 block:
 	BROPEN {push();} statement BRCLOSE { scope = pop();}
 	;
