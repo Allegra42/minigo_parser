@@ -1,5 +1,5 @@
-#Parser and Typechecker for **minigo** language, written in Flex/Bison and C/C++
-##Grammar for the language is located in **GRAMMAR**
+# Parser and Typechecker for **minigo** language, written in Flex/Bison and C/C++
+## Grammar for the language is located in **GRAMMAR**
 
 LIMITATIONS:
 - typechecker is just able to check 2 arguments at all operations.
